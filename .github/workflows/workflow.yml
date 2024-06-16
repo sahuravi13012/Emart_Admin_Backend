@@ -12,12 +12,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Login to Docker Hub
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-        run: |
-          echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-          docker info
+        run: docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin docker info
 
       - name: Build Docker image
         run: docker build -t emartbackend/nodejs-app .
