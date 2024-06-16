@@ -11,7 +11,7 @@ jobs:
       - name: checkout source
         uses: actions/checkout@v3
       - name: login to docker hub
-        run: docker login -u Ravi13012 -p Ravi@1306
+        run: echo Ravi@1306 | docker login -u Ravi13012 --password-stdin
       - name: Build docker image
         run: docker build -t emartbackend/nodejs-app .
       - name: Publish image to docker hub
