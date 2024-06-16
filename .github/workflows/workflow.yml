@@ -6,24 +6,34 @@ on:
 
 jobs:
   build:
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest
     steps:
-      - name: checkout source
+      - name: Checkout source
         uses: actions/checkout@v3
-      - name: login to docker hub
-        run: docker login -u {{secrets.DOCKERHUB_USERNAME}} -p {{secrets.DOCKERHUB_TOKEN}}
-      - name: Build docker image
+
+      - name: Login to Docker Hub
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+        run: |
+          echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          docker info
+
+      - name: Build Docker image
         run: docker build -t emartbackend/nodejs-app .
-      - name: Publish image to docker hub
+      
+      - name: Publish image to Docker Hub
         run: docker push emartbackend/nodejs-app:latest
 
   deploy:
     needs: build
-    runs-on: [aws-ec2]
+    runs-on: self-hosted  # Ensure your self-hosted runner is properly set up
     steps:
-      - name: Pull image from docker hub
+      - name: Pull image from Docker Hub
         run: docker pull emartbackend/nodejs-app:latest
-      - name: Delete old contaiiner
-        run: docker rm -f nodejs-app-container
-      - name: Run docker container
-        run: docker run -d -p 5000:5000 -name nodejs-app-container emartbackend/nodejs-app:latest
+      
+      - name: Delete old container
+        run: docker rm -f nodejs-app-container || true  # Avoid failure if the container does not exist
+      
+      - name: Run Docker container
+        run: docker run -d -p 5000:5000 --name nodejs-app-container emartbackend/nodejs-app:latest
