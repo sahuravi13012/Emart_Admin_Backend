@@ -18,20 +18,20 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_EMAIL }}" --password-stdin
       
       - name: Build Docker image
-        run: docker build -t emartbackend/nodejs-app .
+        run: docker build -t emartbackend/e-com ..
       
       - name: Publish image to Docker Hub
-        run: docker push emartbackend/nodejs-app:latest
+        run: docker push emartbackend/e-com:latest
 
   deploy:
     needs: build
     runs-on: self-hosted  # Ensure your self-hosted runner is properly set up
     steps:
       - name: Pull image from Docker Hub
-        run: docker pull emartbackend/nodejs-app:latest
+        run: docker pull emartbackend/e-com:latest
       
       - name: Delete old container
-        run: docker rm -f nodejs-app-container || true  # Avoid failure if the container does not exist
+        run: docker rm -f e-com-container || true  # Avoid failure if the container does not exist
       
       - name: Run Docker container
-        run: docker run -d -p 5000:5000 --name nodejs-app-container emartbackend/nodejs-app:latest
+        run: docker run -d -p 5000:5000 --name e-com-container emartbackend/e-com:latest
