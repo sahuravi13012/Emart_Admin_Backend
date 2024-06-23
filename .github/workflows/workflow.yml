@@ -7,30 +7,49 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: docker:20.10.9
+      options: --privileged # Required for DinD
+
+    services:
+      docker:
+        image: docker:20.10.9
+        options: --privileged # Required for DinD
+
     steps:
       - name: Checkout source
         uses: actions/checkout@v3
 
-      - name: Login to Docker Hub
-        env:
-          DOCKER_EMAIL: ${{ secrets.DOCKER_EMAIL }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_EMAIL }}" --password-stdin
-
       - name: Build Docker image
-        run: docker build -t ravi13012/nodejs-app .
+        run: |
+          docker build -t ravi13012/nodejs-app:latest .
 
       - name: Publish image to Docker Hub
-        run: docker push ravi13012/nodejs-app:latest
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker push ravi13012/nodejs-app:latest
 
   deploy:
     needs: build
-    runs-on: self-hosted # Ensure your self-hosted runner is properly set up
+    runs-on: ubuntu-latest
+    container:
+      image: docker:20.10.9
+      options: --privileged # Required for DinD
+
+    services:
+      docker:
+        image: docker:20.10.9
+        options: --privileged # Required for DinD
+
     steps:
       - name: Pull image from Docker Hub
         run: docker pull ravi13012/nodejs-app:latest
+
+      - name: Stop existing Docker container
+        run: docker stop e-com-container || true
+
+      - name: Remove existing Docker container
+        run: docker rm e-com-container || true
+
       - name: Run Docker container
-        run: |
-          docker run -d -p 5000:5000 --name e-com-container ravi13012/nodejs-app:latest
-          docker ps -a
-          docker logs e-com-container
+        run: docker run -d -p 5000:5000 --name e-com-container ravi13012/nodejs-app:latest
